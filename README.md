@@ -33,16 +33,24 @@ Gemini API.
 - **Smart field matching** — Gemini matches form labels to your profile
   semantically (e.g. "Given name" → `firstName`, "Work authorization" →
   eligibility).
-- **Review before filling** — proposed values appear in a side panel with a
-  confidence score; you can edit any value before it's written to the page.
-- **Framework-aware filling** — dispatches native `input`/`change`/`blur` events
-  so React/Vue/Angular forms register the changes.
-- **Submit guard** — warns you before a form is submitted so you always get a
-  final review (it notifies, it does not hard-block).
+- **Review after filling** — each filled value appears in the side panel with a
+  confidence score; you can edit any value and re-apply it to the page.
+- **Framework-aware filling** — uses native value setters and dispatches
+  `input`/`change` events so React/Vue/Angular forms register the changes.
+  Handles `select`, radio/checkbox, and async dropdowns (e.g. react-select).
+- **Drafts essay answers** — for free-text prompts like "Why do you want to work
+  here?", Gemini drafts a short response in your preferred tone, grounded in the
+  job page and your cover-letter template.
+- **Save answers back to your profile** — values you correct can be written back
+  to the right profile path so they're reused next time.
+- **Submit guard** — intercepts the final Submit/Apply button once and asks you
+  to review; after you confirm, click the button again to actually submit.
+  "Next"/"Continue"/"Save" buttons are never blocked, so multi-page flows work.
 - **Token & cost meter** — shows the Gemini token usage and approximate cost of
   each scan.
-- **No data invention** — the prompt explicitly forbids fabricating emails,
-  phone numbers, or IDs; unknown fields are left blank.
+- **No data invention** — the prompt explicitly forbids fabricating employers,
+  dates, GPA, salary, or addresses; unknown fields are left blank. Voluntary
+  demographic fields are skipped unless you provide them.
 
 ---
 
@@ -51,10 +59,10 @@ Gemini API.
 The extension has four cooperating parts. Here's the flow for a single scan-and-fill:
 
 ```
- ┌─────────────┐   1. Scan      ┌──────────────────┐
- │  Side panel  │ ─────────────▶ │ content/extract.js│  reads form fields
- │ (panel.js)   │ ◀───────────── │  (page context)   │  → JSON list of fields
- └──────┬───────┘   fields JSON  └──────────────────┘
+ ┌─────────────┐  1. Scan & Fill  ┌──────────────────┐
+ │  Side panel  │ ───────────────▶ │ content/extract.js│  reads form fields
+ │ (panel.js)   │ ◀─────────────── │  (page context)   │  → JSON list of fields
+ └──────┬───────┘   fields JSON    └──────────────────┘
         │
         │ 2. Map fields (profile + fields)
         ▼
@@ -63,29 +71,32 @@ The extension has four cooperating parts. Here's the flow for a single scan-and-
  │ (service worker)  │ ◀──────────────────── │    Flash      │
  └──────┬───────────┘   value mappings      └──────────────┘
         │
-        │ 4. Render rows for review (you can edit)
+        │ 4. Write values + render rows for review
         ▼
- ┌─────────────┐   5. Fill      ┌──────────────────┐
+ ┌─────────────┐   auto-fill    ┌──────────────────┐
  │  Side panel  │ ─────────────▶ │  content/fill.js  │  writes values into
- │              │                │  (page context)   │  the form fields
+ │  (review +   │                │  (page context)   │  the form fields
+ │   edit)      │  Apply edits ─▶│                   │
  └─────────────┘                └──────────────────┘
 ```
 
-1. **`content/extract.js`** runs in the page and collects every fillable field —
-   its key, label (from `<label>`, `aria-label`, or placeholder), type, options,
-   `required`, and `maxLength`. Hidden, file, password, and button fields are
-   skipped; radio/checkbox groups are collapsed to one entry per group.
-2. **`sidepanel/panel.js`** sends that list, plus your profile, to the background
+1. You click **Scan & Fill** in the side panel.
+2. **`content/extract.js`** runs in the page and collects every fillable field —
+   its label (from `<label>`, `aria-label`, wrapping label, or placeholder),
+   kind, options, `required`, and current value. Hidden, file, submit, and
+   button fields are skipped; radio groups are collapsed to one entry per group.
+3. **`sidepanel/panel.js`** sends that list, plus your profile, to the background
    worker.
-3. **`background.js`** (the service worker) loads the prompt from
+4. **`background.js`** (the service worker) loads the prompt from
    `prompts/field-map.md`, calls the Gemini API, and parses the JSON response
-   into mapping rows (`{ key, value, confidence, label }`).
-4. The side panel renders each proposed value in an editable row so you can
-   review and correct anything.
-5. When you click **Fill fields**, **`content/fill.js`** writes the values back
-   into the page, firing the events frameworks need to see.
-6. **`content/submit-guard.js`** listens for form submissions and warns you in
-   the panel before anything is sent.
+   into mapping rows (`{ selector, value, confidence, source, savePath, ... }`).
+5. **`content/fill.js`** immediately writes those values back into the page,
+   firing the events frameworks need to see, and the side panel renders each
+   value in an editable row for review. Change anything and click **Apply edits**
+   to re-write it; click **Save edits to profile** to remember a correction.
+6. **`content/submit-guard.js`** is armed for the tab. When you click the final
+   Submit/Apply button, it blocks that first click and prompts you to review;
+   after you confirm, click the button again to actually submit.
 
 ---
 
@@ -129,14 +140,15 @@ machine only). You only do this once.
 
 1. Open a job-application page.
 2. Click the extension icon to open the side panel.
-3. Click **Scan this page** — it extracts the fields and asks Gemini to map them.
-4. Review the proposed values. Edit any of them inline. Low-confidence guesses
-   are flagged with a score.
-5. Click **Fill fields** to write the values into the form.
-6. Keep **Warn before submit** checked to get a review prompt before the form is
-   actually submitted.
-7. Finish anything the tool left blank (file uploads, custom essays), then submit
-   yourself.
+3. Click **Scan & Fill this page** — it extracts the fields, asks Gemini to map
+   them, and fills the form. The proposed values appear below for review, each
+   with a confidence badge (high / medium / low / unknown / skipped).
+4. Review the values. Edit any of them inline, then click **Apply edits** to
+   re-write them into the form. Click **Save edits to profile** to remember a
+   correction for next time.
+5. Finish anything the tool left blank (file uploads, custom essays).
+6. When you click the page's final **Submit/Apply** button, the guard blocks it
+   once and prompts you to review — click the button again to actually submit.
 
 ---
 
@@ -233,7 +245,7 @@ form-filler.
   `background.js` includes a tolerant parser that strips code fences and recovers
   from minor formatting issues.
 - **Message types** used between parts: `JOBFILL_EXTRACT`, `JOBFILL_MAP_FIELDS`,
-  `JOBFILL_FILL`, `JOBFILL_SET_GUARD`, `JOBFILL_SUBMIT_INTERCEPTED`,
-  `JOBFILL_SUBMIT_NOTIFY`.
+  `JOBFILL_FILL`, `JOBFILL_SUBMIT_ARM`, `JOBFILL_SUBMIT_RELEASE`,
+  `JOBFILL_SUBMIT_INTERCEPTED`, `JOBFILL_SUBMIT_NOTIFY`.
 - **Pricing meter** in `panel.js` uses Gemini 2.5 Flash rates; update the
   constants if you switch models.
