@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Job Application Auto-Fill</title>
+<style>
+  body { font: 13px/1.4 -apple-system, system-ui, sans-serif; margin: 0; padding: 12px; color: #111; }
+  h2 { font-size: 14px; margin: 8px 0; }
+  button { font: inherit; padding: 6px 10px; border: 1px solid #888; background: #f4f4f4; border-radius: 4px; cursor: pointer; }
+  button.primary { background: #1a73e8; color: white; border-color: #1a73e8; }
+  button.danger { background: #c5221f; color: white; border-color: #c5221f; }
+  .row { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 6px 0; }
+  .label { font-weight: 600; }
+  .meta { color: #666; font-size: 11px; }
+  .badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-left: 6px; }
+  .high { background: #e6f4ea; color: #137333; }
+  .medium { background: #fef7e0; color: #b06000; }
+  .low, .unknown { background: #fce8e6; color: #c5221f; }
+  .skipped { background: #eee; color: #555; }
+  textarea, input[type=text] { width: 100%; box-sizing: border-box; font: inherit; padding: 4px; }
+  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  details { margin-top: 10px; }
+  #notice { padding: 8px; background: #fff8c5; border: 1px solid #d4a72c; border-radius: 4px; margin: 8px 0; display: none; }
+  #status { color: #555; margin: 6px 0; }
+</style>
+</head>
+<body>
+  <h2>Job Application Auto-Fill</h2>
+  <div class="toolbar">
+    <button id="scan" class="primary">Scan & Fill this page</button>
+    <button id="apply">Apply edits</button>
+    <button id="saveEdits">Save edits to profile</button>
+    <button id="settings">Settings</button>
+  </div>
+  <div id="status"></div>
+  <div id="usage" class="meta"></div>
+  <div id="notice"></div>
+  <div id="results"></div>
+
+  <details open>
+    <summary><b>Settings</b> (paste API key here)</summary>
+    <div style="margin-top: 8px;">
+      <label>Google AI API key (Gemini)</label>
+      <input id="apiKey" type="text" placeholder="AIza..." />
+      <label style="margin-top:8px; display:block;">Profile JSON</label>
+      <textarea id="profile" rows="14" placeholder='{"personal": {"firstName": "..."}}'></textarea>
+      <div style="margin-top:6px;">
+        <button id="save">Save</button>
+        <button id="loadExample">Load example profile</button>
+      </div>
+    </div>
+  </details>
+
+<script src="panel.js"></script>
+</body>
+</html>

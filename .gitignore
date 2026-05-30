@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+
+# Personal data — keep local only, never commit
+extension/profile/profile.json
+*.pdf

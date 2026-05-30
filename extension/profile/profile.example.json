@@ -1,0 +1,66 @@
+{
+  "personal": {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "email": "jane.doe@example.com",
+    "phone": "+1-555-0100",
+    "address": {
+      "line1": "123 Main St",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip": "94105",
+      "country": "USA"
+    },
+    "linkedin": "https://www.linkedin.com/in/jane-doe/",
+    "github": "https://github.com/jane-doe",
+    "portfolio": "",
+    "pronouns": ""
+  },
+  "eligibility": {
+    "workAuthorization": "Authorized to work in the IN",
+    "requireSponsorship": "No",
+    "willingToRelocate": "Yes",
+    "noticePeriod": "2 months"
+  },
+  "experience": [
+    {
+      "company": "Example Corp",
+      "title": "Software Engineer",
+      "startDate": "2022-06",
+      "endDate": "",
+      "current": true,
+      "location": "San Francisco, CA",
+      "description": "Built and shipped features across web and backend.",
+      "achievements": [
+        "Led migration that reduced p95 latency by 35%.",
+        "Mentored 3 junior engineers."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "Example University",
+      "degree": "B.S.",
+      "field": "Computer Science",
+      "startDate": "2018-09",
+      "endDate": "2022-05",
+      "gpa": "3.8"
+    }
+  ],
+  "skills": ["Python", "TypeScript", "React", "AWS", "PostgreSQL"],
+  "compensation": {
+    "currentSalary": "",
+    "expectedSalary": "",
+    "currency": "USD"
+  },
+  "demographics": {},
+  "essays": {
+    "whyUs": "",
+    "whyRole": "",
+    "biggestStrength": "I bring depth in distributed systems and a bias for shipping.",
+    "coverLetterTemplate": "I'm excited about {{company}} because {{company_reason}}. My background in {{relevant_area}} and recent work on {{recent_work}} aligns directly with the {{role}} role."
+  },
+  "preferences": {
+    "draftToneForUnknowns": "professional"
+  }
+}
